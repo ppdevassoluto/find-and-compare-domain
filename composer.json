@@ -4,8 +4,5 @@
     "type": "project",
     "authors": [{
         "name": "ppdev"
-    }],
-    "require": {
-        "php": "^7.2.0"
-    }
+    }]
 }
