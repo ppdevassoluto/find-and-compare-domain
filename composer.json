@@ -5,5 +5,7 @@
     "authors": [{
         "name": "ppdev"
     }],
-    "require": {}
+    "require": {
+        "php": "^7.2.0"
+    }
 }
