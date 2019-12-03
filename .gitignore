@@ -1,2 +1,5 @@
-vendor/
+vendor
 .env
+.Procfile.txt
+src/js/bck_*
+src/js/config.js
