@@ -1,0 +1,14 @@
+{
+    "name": "ppdev/find-compare-website",
+    "description": "find and compare websites",
+    "type": "project",
+    "authors": [{
+        "name": "ppdev"
+    }],
+    "config": {
+        "platform": {
+            "php": ">=5.6.0"
+        }
+    },
+    "require": {}
+}
