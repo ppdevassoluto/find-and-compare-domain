@@ -1,0 +1,5 @@
+<?php 
+
+$appConfig['returnResultCompare'] = 'csv';
+
+?>

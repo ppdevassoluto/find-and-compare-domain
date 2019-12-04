@@ -154,8 +154,9 @@ $('document').ready(function() {
 
         endpointUrlCrawl = appConfig.endpointUrlCrawl;
         endpointUrlCrawl += '?domain1=' + domain1 + '&domain2=' + domain2;
-        console.log(appConfig.endpointUrlCrawl);
-        downloadFileCsv(endpointUrlCrawl);
+
+        console.log(endpointUrlCrawl);
+        //downloadFileCsv(endpointUrlCrawl);
         return false;
         $.ajax(
             endpointUrlCrawl, {

@@ -1,5 +1,5 @@
-vendor
-.env
-.Procfile.txt
-src/js/bck_*
-src/js/config.js
+vendor/*
+.env 
+bck*
+frontend/src/js/config.js
+backend/logcompare/*
