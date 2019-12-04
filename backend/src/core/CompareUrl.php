@@ -21,9 +21,9 @@ class CompareUrl {
         foreach($list1 as $key => $text1){
            
             $valueCompare = 0;
-            $similLink[$key] = $text1.';;0%;'.PHP_EOL;
+            $similLink[$key] = $text1.';/;0%;'.PHP_EOL;
             foreach($list2 as $text2){ 
-       
+               
                 //$value = $this->_levperc(_formatLinkToCompare($link1),_formatLinkToCompare($link2)); 
                 $res_value = $this->_myLevCompareLink($this->_formatLinkToCompare($text1),$this->_formatLinkToCompare($text2));
         
@@ -32,10 +32,8 @@ class CompareUrl {
                     //if ($res_value>0.15)
                     $similLink[$key]  = $text1.';'.$text2. ';'.$res_value.'%;'.PHP_EOL; 
                 }     
-            }  
-           
-            $this->writeResult($similLink[$key]);
- 
+            }   
+            $this->writeResult($similLink[$key]); 
         } 
  
         return true;
@@ -46,7 +44,7 @@ class CompareUrl {
 
         if ($this->returnResult =='csv' && $this->returnHeaderCsv==false){
 
-            //$this->prepareHeaderCsv();
+            $this->prepareHeaderCsv();
             $this->returnHeaderCsv = true;
 
             if(!empty($this->rowHeaderCsv))

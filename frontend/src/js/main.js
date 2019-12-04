@@ -17,10 +17,10 @@ $('document').ready(function() {
 
 
         let currentdate = new Date();
-        let nowtime = "Last Sync: " + currentdate.getDay() + "/" + currentdate.getMonth() +
+        /*let nowtime = "Last Sync: " + currentdate.getDay() + "/" + currentdate.getMonth() +
             "/" + currentdate.getFullYear() + " @ " +
             currentdate.getHours() + ":" +
-            currentdate.getMinutes() + ":" + currentdate.getSeconds();
+            currentdate.getMinutes() + ":" + currentdate.getSeconds();*/
 
         $('#nowtime span').text(nowtime);
     }
@@ -155,8 +155,8 @@ $('document').ready(function() {
         endpointUrlCrawl = appConfig.endpointUrlCrawl;
         endpointUrlCrawl += '?domain1=' + domain1 + '&domain2=' + domain2;
 
-        console.log(endpointUrlCrawl);
-        //downloadFileCsv(endpointUrlCrawl);
+        //console.log(endpointUrlCrawl);
+        downloadFileCsv(endpointUrlCrawl);
         return false;
         $.ajax(
             endpointUrlCrawl, {
