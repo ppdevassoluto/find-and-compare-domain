@@ -1,13 +1,10 @@
-<?php 
- 
-namespace Crawl;
+<?php   
 require_once('./config/config.php');
-require_once('./src/core/CrawlWebsite.php');
-require_once('./src/core/CompareUrl.php');
-require_once('./src/core/CrawlAndCompareUrl.php');
-  
+require_once('./config/autoconfig.php');  
+require_once('./config/autoload.php');
  
-function findAndCompare($returnResult='csv'){
+use src\service\CrawlAndCompare2Domain;
+function findAndCompare(){
     
     if(!isset($_GET['domain1']))
         $domain1 = '';
@@ -19,13 +16,10 @@ function findAndCompare($returnResult='csv'){
     else
         $domain2 = urldecode($_GET['domain2']);    
         
-    $compareDomain = new CrawlAndCompareUrl();  
-    $rowHeaderCsv=$domain1.';'.$domain2.';percentage compare;';
-    $compareDomain->writeRowHeaderCsv($rowHeaderCsv);
-    $compareDomain->returnResult($returnResult);
-    $compareDomain->findAndCompare($domain1,$domain2);
+    $compare2Domain = new CrawlAndCompare2Domain();  
+    $compare2Domain->findAndCompare($domain1,$domain2);
 
 }
  
-findAndCompare($appConfig['returnResultCompare']); 
+findAndCompare(); 
 ?>

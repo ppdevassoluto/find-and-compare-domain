@@ -1,4 +1,6 @@
 $('document').ready(function() {
+    $.ajaxSetup({ cache: false });
+    "use strict";
 
     var alphabetIndex = [];
     initApp();
@@ -20,9 +22,9 @@ $('document').ready(function() {
         /*let nowtime = "Last Sync: " + currentdate.getDay() + "/" + currentdate.getMonth() +
             "/" + currentdate.getFullYear() + " @ " +
             currentdate.getHours() + ":" +
-            currentdate.getMinutes() + ":" + currentdate.getSeconds();*/
+            currentdate.getMinutes() + ":" + currentdate.getSeconds();
 
-        $('#nowtime span').text(nowtime);
+        $('#nowtime span').text(nowtime);*/
     }
 
 
@@ -96,11 +98,11 @@ $('document').ready(function() {
         if (protocol != 'https:' && protocol != 'http:')
             return false;
 
-        valido = protocol + '//' + hostname;
+        urlValido = protocol + '//' + hostname;
         if (port != '')
-            valido += ':' + port;
+            urlValido += ':' + port;
 
-        if (valido == strUrl || valido + '/' == strUrl)
+        if (urlValido == strUrl || urlValido + '/' == strUrl)
             return true;
         else
             return false;
@@ -109,13 +111,19 @@ $('document').ready(function() {
 
     function check_url(str) {
 
-        var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+        /*var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
             '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
             '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
             '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
             '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-            '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator 
+            '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator */
 
+        var pattern = new RegExp('^(https?:\\/\\/)' + // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+            '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator            
         return !!pattern.test(str);
 
     }
@@ -133,46 +141,90 @@ $('document').ready(function() {
     $('body').on("submit", "form", function(event) {
 
         event.preventDefault();
+
         domain1 = $('#domain1').val().trim();
         domain2 = $('#domain2').val().trim();
 
         if (domain1 == '' || domain2 == '') {
-            alert("Verificare i valori immessi");
+            alert("Attenzione indicare entrambi i domini");
             return false;
         }
 
         if (domain1 == domain2) {
-            alert('inserire domini diversi');
+            alert('Attenzione hai indicato lo stesso dominio per dominio1 e dominio2');
             return false;
         }
 
         if (validateDomain(domain1) == false || validateDomain(domain2) == false) {
-            alert("verificare i valori immessi");
+            alert("Verificare che i domini siano nella forma: https:// oppure http://");
             return false;
         }
 
 
         endpointUrlCrawl = appConfig.endpointUrlCrawl;
-        endpointUrlCrawl += '?domain1=' + domain1 + '&domain2=' + domain2;
+        endpointUrlFile = appConfig.endpointUrlFile;
+        console.log(endpointUrlCrawl);
 
-        //console.log(endpointUrlCrawl);
-        downloadFileCsv(endpointUrlCrawl);
-        return false;
-        $.ajax(
-            endpointUrlCrawl, {
-                method: 'GET',
-                data: {
-                    'domain1': encodeURIComponent(domain1),
-                    'domain2': encodeURIComponent(domain2)
-                },
-                complete: function(resp) {
-                    alert(resp.responseText);
 
-                }
+        divMsg = $('#parsingWebsites');
+        msgStatus = $('#parsingWebsites span.msg');
+        spinnerLoading = $('#parsingWebsites span.spinner');
+
+        divMsg.removeClass('alert-danger').removeClass('alert-success').addClass('alert-info');
+        spinnerLoading.addClass('spinner-border');
+        msgStatus.text('Esecuzione in corso.. attendere');
+
+
+        button_submit = $('body button');
+        button_submit.prop('disabled', true);
+
+        $.ajax({
+            type: 'GET',
+            url: endpointUrlCrawl,
+            data: {
+                domain1: encodeURI(domain1),
+                domain2: encodeURI(domain2)
+            },
+            encode: true,
+            cache: false
+
+        }).done(function(res) {
+
+            let data = JSON.parse(res);
+            console.log('Log ok: ' + res);
+
+            spinnerLoading.removeClass('spinner-border');
+            button_submit.prop('disabled', false);
+
+            if (data.error == 1) {
+
+                divMsg.removeClass('alert-info').addClass('alert-danger');
+                msgStatus.text('Errore. ' + data.error_message);
+                console.log('Messaggio errore operazione: ' + data.error_message);
+
+            } else {
+
+                divMsg.removeClass('alert-info').addClass('alert-success');
+                msgStatus.text('Esecuzione terminata');
+
+                fileResult = endpointUrlFile + data.filename
+                console.log('Filename risultato: ' + fileResult);
+                downloadFileCsv(fileResult);
             }
-        );
 
+
+
+        }).fail(function(data) {
+
+            spinnerLoading.removeClass('spinner-border');
+            divMsg.removeClass('alert-info').addClass('alert-danger');
+            msgStatus.text('Errore in fase di invio delle informazioni.');
+            button_submit.prop('disabled', false);
+
+
+            console.log('Errore invio dati');
+
+        });
+        return true;
     });
-
-
 });

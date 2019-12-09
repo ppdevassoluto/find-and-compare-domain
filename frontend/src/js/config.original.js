@@ -1,3 +1,0 @@
-var appConfig = {
-    'endpointUrlCrawl': ' ',
-}

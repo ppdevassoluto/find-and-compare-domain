@@ -1,128 +1,106 @@
 <?php
-namespace Crawl;
+namespace src\core;
 use  \DOMDocument;
 class CrawlWebsite { 
 
-    static function crawl($domain=''){ 
+    /**
+    * Implementa: 
+    * - il processo di estrazione degli url da una pagina 
+    * - la reiterazione del processo per la profondita indicata  
+    */    
+ 
+    private $skipContent = array(
+        'pdf','doc','xls', 'xlsx', 'gif','png','jpg','jpeg','bmp', 'tiff', 'zip', 
+        'tar.gz','rar','tgz','js','css','txt','exe','mov','mp3','wav','avi','mid','midi',
+        'mpeg','mpg'
+    );
+ 
+    
+    private $domain = '';
+    private $hrefList = array();
+    private $domainInfo = array();
+    public $depthLevel = 1;
+
+    public function __construct(){ 
+        global $appConfig, $appAutoConfig; 
+        $this->depthLevel =  $appConfig['depthLevel'];
+ 
+    }
+
+    public function crawl($domain=''){ 
 
         if(substr($domain,-1)!='/')
             $domain.='/';
 
-        return  self::_parseDomain($domain);
+        $this->domain = $domain;   
+        $this->domainInfo = UtilityUrl::extractInfoUrl($domain);   
+        
+
+        $this->hrefList=array();
+        $this->_parseDomainAndDepth($domain); 
+      
+        $this->hrefList = array_keys($this->hrefList); 
+        return  $this->hrefList;
    
-    } 	 
-    static function validateDomain($domain=''){
+    } 	  
 
-        
-        $domain = filter_var($domain, FILTER_SANITIZE_URL);  
-        $domainInfo = self::_extractInfoLink($domain); 
-        
-        if (    
-            !isset($domainInfo['scheme']) 
-            || ($domainInfo['scheme']!='https' && $domainInfo['scheme']!='http') 
-            || !isset($domainInfo['host']) )
-            return false;  
+    private function _parseDomainAndDepth($urlContent=''){
+  
+         
+        $infoUrlContent = UtilityUrl::extractInfoUrl($urlContent); 
+        $compareUrl = $infoUrlContent['path'];
 
-        if ($domainInfo['path']!=='/')
+        if (isset($this->hrefList[$compareUrl])) 
             return false;
 
-        if (!filter_var($domain, FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED)) 
+        # aggiungo alla lista link esaminati    
+        $this->hrefList[$compareUrl]=1;  
+        
+        if (in_array(UtilityUrl::getExtension($urlContent), $this->skipContent))
             return false; 
-        else 
-            return true;
-     
-    }    
-
-   
-    static private function _parseDomain($domain=''){
-
-        $list = self::_getHrefFromPage($domain,$domain,1);  
-     
-        $listLinks = $list['links'];
-        foreach($list['dephtLinks']  as $link)
-        {
-        
-            $linkPage = self::_getHrefFromPage($link,$domain,-1);  
-            $listLinks = array_merge($listLinks,$linkPage['links']);
-         
-        }
-       
-        return  array_unique($listLinks);
-    }  
-
-    static private function _getHrefFromPage($urlPage='', $domain='', $depthLink=-1){
-
-        $hrefList=array();
-        $hrefDepthList =array();
-        $hrefExaminated = array();
-
-
-        $contentPage = @file_get_contents($urlPage); 
-        
+           
+        # estrazione contenuto dalla pagina
+        $contentPage = @file_get_contents($urlContent); 
         if ($contentPage === false) 
-            return array('links' =>$hrefList, 'dephtLinks'=>$hrefDepthList);
-       
-              
+            return false;
+          
+        # estrazione links dal contenuto      
         $document= new DOMDocument;
         @$document->loadHTML($contentPage);
         $linksObj = $document->getElementsByTagName('a');
         //print_r($links);
-
-        $hrefList=array();
-        $hrefDepthList =array();
-        $hrefExaminated = array();
-
-        $domainInfo = self::_extractInfoLink($domain); 
-        foreach($linksObj as $link){
+  
+        foreach($linksObj as $link){ 
 
             $href =  $link->getAttribute('href'); 
-            if(in_array($href, $hrefExaminated))
+            if(empty($href) || $href[0] == '#' || substr($href,0,10) == 'javascript') 
                 continue;
+                  
+            $init_href =  substr($href,0,2);
+            if ($init_href=='//')
+                $href = $this->domainInfo['scheme'].$href; 
+            elseif($init_href == './')
+                $href = $this->domain.substr($href,2); 
+            elseif($href[0] == '/')
+                $href = substr($this->domain,0,-1).$href;  
             
-            $hrefExaminated[] = $href; 
-
-            if(empty($href) || $href[0] == '#' || substr($href,0,10) == 'javascript'){
+            $infoUrl = UtilityUrl::extractInfoUrl($href); 
+            if (!isset($infoUrl['scheme']) || ($infoUrl['scheme']!='https' && $infoUrl['scheme']!='http'))
                 continue;
-            }elseif($href[0] == '/'){
-                $href = substr($domain,0,-1).$href; 
-            }elseif($href[0] == './'){
-                $href = $domain.$href; 
-            }   
-            
-            $infoLink = self::_extractInfoLink($href); 
-
-            if (!isset($infoLink['scheme']) || ($infoLink['scheme']!='https' && $infoLink['scheme']!='http'))
-                continue;
-
-            if ($infoLink['host']==$domainInfo['host']) 
-                $hrefList[] = $infoLink['path'];  
-
-            if ($infoLink['host']==$domainInfo['host'] && $depthLink>0 && !empty($domain)  
-                && $infoLink['depthLevel']==$depthLink )           
-                $hrefDepthList[] = $href;   
+       
+            if ($infoUrl['host']==$this->domainInfo['host']) { 
                 
+                // print PHP_EOL.$urlContent." -> ".$infoUrl['host']."==".$this->domainInfo['host']." - ".$href. ' -> '.$infoUrl['path'];
+
+                if ($infoUrl['depthLevel']<=$this->depthLevel)
+                    $this->_parseDomainAndDepth($href) ;
+                elseif (!isset($this->hrefList[$infoUrl['path']])) 
+                    $this->hrefList[$infoUrl['path']]=1;   //$this->hrefList[$href]=1;  
+            } 
+                  
             unset($infoLink); 
-        }
-
-        return array('links' =>$hrefList, 'dephtLinks'=>$hrefDepthList);
-    }
-
-    static private function _extractInfoLink($urlPage=''){
-
-
-        $parseUrl = parse_url($urlPage);  
-    
-        if (isset($parseUrl['path'])){
- 
-            // $parseUrl['depthLevel'] = substr_count($parseUrl['path'],'/') -1; 
-            $parseUrl['depthLevel'] = substr_count($parseUrl['path'],'/'); 
-        
-        }else{
-            $parseUrl['depthLevel'] = 0;
-            $parseUrl['path'] = '/';    
         } 
-        return  $parseUrl;
-    }   
-    
-
+              
+    } 
+ 
 }

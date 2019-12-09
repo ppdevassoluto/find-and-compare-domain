@@ -25,27 +25,33 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <h1>Find And Compare Websites</h1>
+                <h1>Analisi websites e confronto links</h1>
                 <form>
                     <div class="form-group">
-                        <label for="domain1">Domain 1 </label>
-                        <input type="text" name="domain1" id="domain1" required value="" class="form-control" placeholder="">
+                        <label for="domain1">Dominio 1 </label>
+                        <input type="text" name="domain1" id="domain1" required value="" class="form-control" placeholder="https://www.....">
                     </div>
                     <div class="form-group">
-                        <label for="domain2">Domain 2</label>
-                        <input type="text" name="domain2" id="domain2" required value="" class="form-control" placeholder="">
+                        <label for="domain2">Dominio 2</label>
+                        <input type="text" name="domain2" id="domain2" required value="" class="form-control" placeholder="https://www.....">
                     </div>
                     <br/>
-                    <button type="submit" id="findAndCompare" class=" btn btn-primary my-2 my-sm-0 ">Find And Compare</button>
+                    <button type="submit" id="findAndCompare" class=" btn btn-primary my-2 my-sm-0 ">Esegui Confronto</button>
+                    <br> <br>
+                    <div id="parsingWebsites" class="alert">
+                        <span class="spinner"></span>
+                        <span class="msg"></span>
+                    </div>
+
                 </form>
 
             </div>
         </div>
         <div class="row ">
             <div class="col-lg-12 ">
-                <br/>
-                <div id="countInputChar">Number of characters (domain 1 + domain 2): <span></span></div>
-                <div id="alphabetNumberInput">Positions in the alphabet (domain 1): <span></span></div>
+                <hr />
+                <div id="countInputChar">Numero di caratteri (dominio 1 + dominio 2): <span></span></div>
+                <div id="alphabetNumberInput">Somma posizione nell'alfabeto (dominio 1): <span></span></div>
                 <!-- div id="nowtime"><span></span></div -->
             </div>
         </div>
