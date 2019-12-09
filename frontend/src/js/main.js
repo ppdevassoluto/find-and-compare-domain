@@ -1,3 +1,8 @@
+var appConfig = {
+    'endpointUrlCrawl': basicProjectUrl + '/backend/compare-domains.php',
+    'endpointUrlFile': basicProjectUrl + '/backend/logcompare/'
+};
+
 $('document').ready(function() {
     $.ajaxSetup({ cache: false });
     "use strict";
@@ -211,8 +216,6 @@ $('document').ready(function() {
                 console.log('Filename risultato: ' + fileResult);
                 downloadFileCsv(fileResult);
             }
-
-
 
         }).fail(function(data) {
 
