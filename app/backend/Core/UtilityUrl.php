@@ -1,5 +1,5 @@
 <?php
-namespace src\core;
+namespace BECompare\Core;
 use  \DOMDocument;
 class UtilityUrl { 
  

@@ -1,9 +1,9 @@
 <?php
-namespace src\service; 
+namespace BECompare\Controller; 
 
-use src\core\UtilityUrl;
-use src\core\CrawlWebsite;
-use src\core\Compare2ListUrl;
+use BECompare\Core\UtilityUrl;
+use BECompare\Core\CrawlWebsite;
+use BECompare\Core\Compare2ListUrl;
 
 class CrawlAndCompare2Domain extends Compare2ListUrl{ 
   

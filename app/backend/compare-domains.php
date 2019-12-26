@@ -1,9 +1,7 @@
 <?php   
-require_once('./config/config.php');
-require_once('./config/autoconfig.php');  
-require_once('./config/autoload.php');
+require_once('./app_bootstap.php');
  
-use src\service\CrawlAndCompare2Domain;
+use BECompare\Controller\CrawlAndCompare2Domain;
 function findAndCompare(){
     
     if(!isset($_GET['domain1']))

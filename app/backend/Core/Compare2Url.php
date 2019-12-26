@@ -1,6 +1,6 @@
 <?php
-namespace src\core; 
-use src\core\Compare2ListUrl;
+namespace BECompare\Core; 
+use BECompare\Core\Compare2ListUrl;
 class Compare2Url{ 
   
     private $instanceCompare = null; 

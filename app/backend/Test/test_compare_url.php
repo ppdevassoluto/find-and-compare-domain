@@ -1,10 +1,8 @@
 <?php 
+  
+require_once('../app_bootstap.php');
  
- require_once('../config/config.php');
- require_once('../config/autoconfig.php');  
- require_once('../config/autoload.php');
- 
- use src\core\Compare2Url;
+ use BECompare\Core\Compare2Url;
 
 $host1="";
 $host2="";

@@ -1,5 +1,6 @@
+.env
 vendor/*
-.env 
 bck*
+bck/*
 frontend/src/js/config.js
-backend/logcompare/*
+logcompare
