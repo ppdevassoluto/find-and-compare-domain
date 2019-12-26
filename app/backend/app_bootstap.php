@@ -10,11 +10,8 @@ elseif(!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
     $protocol= "https://"; 
 else
     $protocol= "http://";  
- 
 
 $AppUrl =  $protocol.$_SERVER['HTTP_HOST']. dirname(dirname($_SERVER['PHP_SELF'] ))."/";
- 
-$appAutoConfig =  array( 
-    'csvFolderPath' =>  $pathFolderProject.'logcompare'.DIRECTORY_SEPARATOR  
-);
-  
+
+#impostazione path cartella contenente i files generati dall'analisi di comparazione degli url.
+$csvFolderPath = $pathFolderProject.'logcompare'.DIRECTORY_SEPARATOR;

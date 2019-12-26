@@ -1,78 +1,113 @@
 <?php
 namespace BECompare\Core;
 use  \DOMDocument;
-class CrawlWebsite { 
+use  BECompare\Core\AnalyzeUrl;
+/**
+* Summary: 
+* - esegue il parsing di una pagina web ed estrae gli url dai link 
+* - reitera il processo di analisi per le pagine di un dominio per la profondità indicata 
+*/  
 
-    /**
-    * Implementa: 
-    * - il processo di estrazione degli url da una pagina 
-    * - la reiterazione del processo per la profondita indicata  
-    */    
- 
-    private $skipContent = array(
-        'pdf','doc','xls', 'xlsx', 'gif','png','jpg','jpeg','bmp', 'tiff', 'zip', 
-        'tar.gz','rar','tgz','js','css','txt','exe','mov','mp3','wav','avi','mid','midi',
-        'mpeg','mpg'
-    );
- 
+class CrawlWebsite {  
     
-    private $domain = '';
-    private $hrefList = array();
-    private $domainInfo = array();
-    public $depthLevel = 1;
+    private $domain = '';   //dominio da analizzare
+    private $hrefList = array(); //lista url analizzati
+    private $domainInfo = array(); //informazioni sul dominio
+    private $skipContent;  //estenzione pagine da non analizzare
+    public $depthLevel = 1; //profondita analisi dominio
 
     public function __construct(){ 
-        global $appConfig, $appAutoConfig; 
-        $this->depthLevel =  $appConfig['depthLevel'];
- 
+
+        /**
+         * Summary: 
+         *  impostazione della profondità di analisi desiderata
+         * 
+         * @parametri globali
+         * @appConfig: impostato in Config/config.php 
+         */        
+        
+        global $appConfig; 
+        $this->depthLevel = $appConfig['depthLevel'];  
+        $this->skipContent = $appConfig['skipContent'] ; 
     }
 
     public function crawl($domain=''){ 
 
+          /**
+         * summary: 
+         * attiva il processo di analisi ricorsiva delle pagine di un dominio 
+         * 
+         * @params:
+         * @domain: dominio da analizzare
+         * 
+         */        
         if(substr($domain,-1)!='/')
             $domain.='/';
 
         $this->domain = $domain;   
-        $this->domainInfo = UtilityUrl::extractInfoUrl($domain);   
-        
+        $this->domainInfo = AnalyzeUrl::getInfoUrl($domain);   
 
         $this->hrefList=array();
-        $this->_parseDomainAndDepth($domain); 
+        $this->_parsePageAndDepth($domain); 
       
         $this->hrefList = array_keys($this->hrefList); 
         return  $this->hrefList;
-   
     } 	  
 
-    private function _parseDomainAndDepth($urlContent=''){
-  
+    private function _parsePageAndDepth($page=''){
+          /**
+         * summary: 
+         * - esegue l' analisi del contenuto una pagina 
+         * - l'url  della pagina viene aggiunto alla lista delle pagine analizzate: $this->hrefList
+         * - la lista link presenti nella pagina sono iterati: 
+         *      * se appartengono al dominio stesso e soddisfano il criterio della profondit allora viene richiesta l'analisi del contenuto
+         *      * altrimenti viene aggiunto alla lista dei url estratti
+         * - reitera il processo per gli url estratti della profondita desiderata
+         * - al termine dell'analizi gli url sono presenti lista $this->hrefList
+         * 
+         * @params:
+         * @page: url pagina da analizzare
+         * 
+         */  
          
-        $infoUrlContent = UtilityUrl::extractInfoUrl($urlContent); 
-        $compareUrl = $infoUrlContent['path'];
-
+        $infoPage= AnalyzeUrl::getInfoUrl($page); 
+        $compareUrl = $infoPage['path']; 
+        
         if (isset($this->hrefList[$compareUrl])) 
-            return false;
-
-        # aggiungo alla lista link esaminati    
+        {
+            #url gia analizzato non viene richiesto la sua analisi
+            return null;
+        }
+        # aggiungo alla lista url esaminati    
         $this->hrefList[$compareUrl]=1;  
         
-        if (in_array(UtilityUrl::getExtension($urlContent), $this->skipContent))
-            return false; 
-           
+        if (\in_array(AnalyzeUrl::getExtension($page), $this->skipContent)){
+            #presente nell'elenco delle estenzioni da non analizzare
+            return null;
+        } 
         # estrazione contenuto dalla pagina
-        $contentPage = @file_get_contents($urlContent); 
+        $contentPage = @file_get_contents($page); 
         if ($contentPage === false) 
-            return false;
+            return null;
           
-        # estrazione links dal contenuto      
+        # estrazione links  
         $document= new DOMDocument;
         @$document->loadHTML($contentPage);
-        $linksObj = $document->getElementsByTagName('a');
-        //print_r($links);
-  
+        $linksObj = $document->getElementsByTagName('a'); 
         foreach($linksObj as $link){ 
 
             $href =  $link->getAttribute('href'); 
+
+            /**
+             * non accetta:
+             * - url vuoto
+             * - url che inizia con # 
+             * - url che inizia con javascritp
+             * 
+             * accetta:
+             * - url nel formato: http(s):://....
+             * - url che iniziano con: //, ./, / 
+             */
             if(empty($href) || $href[0] == '#' || substr($href,0,10) == 'javascript') 
                 continue;
                   
@@ -84,16 +119,21 @@ class CrawlWebsite {
             elseif($href[0] == '/')
                 $href = substr($this->domain,0,-1).$href;  
             
-            $infoUrl = UtilityUrl::extractInfoUrl($href); 
+            $infoUrl = AnalyzeUrl::getInfoUrl($href); 
             if (!isset($infoUrl['scheme']) || ($infoUrl['scheme']!='https' && $infoUrl['scheme']!='http'))
-                continue;
-       
+                continue; 
+
             if ($infoUrl['host']==$this->domainInfo['host']) { 
                 
-                // print PHP_EOL.$urlContent." -> ".$infoUrl['host']."==".$this->domainInfo['host']." - ".$href. ' -> '.$infoUrl['path'];
+                #appartiene al dominio analizzato
+                // Debug::debug(PHP_EOL.$page." -> ".$infoUrl['host']."==".$this->domainInfo['host']." - ".$href. ' -> '.$infoUrl['path']);
+                               
+                if ($infoUrl['depthLevel']<=$this->depthLevel){
+                    #soddisfa il criterio della profondità
+                    #viene richiesto l'analisi della pagina
+                    $this->_parsePageAndDepth($href) ;
+                }                   
 
-                if ($infoUrl['depthLevel']<=$this->depthLevel)
-                    $this->_parseDomainAndDepth($href) ;
                 elseif (!isset($this->hrefList[$infoUrl['path']])) 
                     $this->hrefList[$infoUrl['path']]=1;   //$this->hrefList[$href]=1;  
             } 

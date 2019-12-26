@@ -1,11 +1,12 @@
 <?php
 namespace BECompare\Controller; 
 
-use BECompare\Core\UtilityUrl;
+use BECompare\Core\AnalyzeUrl;  
 use BECompare\Core\CrawlWebsite;
 use BECompare\Core\Compare2ListUrl;
+use BECompare\Controller\Component\CompareDataMsg;
 
-class CrawlAndCompare2Domain extends Compare2ListUrl{ 
+class CrawlAndCompare2Domain{ 
   
     
     /**
@@ -18,18 +19,21 @@ class CrawlAndCompare2Domain extends Compare2ListUrl{
     public function findAndCompare($domain1='', $domain2=''){
        
         /**
-         * @domain1 - @domain2 : parametri domini da confrontare 
+         * @params
+         * @domain1 - @domain2 :   domini da confrontare 
          * 
+         * return:
+         * json array:  error, error_message, filename
          */
 
-
-        #validazione 
+    
+        #validazione domini 
         $validateInput = true;
         $validateMsg = '';
         if (empty($domain1) || empty($domain2)){
             $validateInput=false; 
             $validateMsg = 'Verificare che siano indicati entrambi i domini.';
-            $this->responseError($validateMsg,'Input');
+            CompareDataMsg::getInstance()->responseError($validateMsg,'Input');
         }
     
         if(substr($domain1,-1)!='/')
@@ -41,70 +45,49 @@ class CrawlAndCompare2Domain extends Compare2ListUrl{
        
         $validateInput =  $domain1 === $domain2 ? false : true;
 
-        if ($validateInput==false){
-
+        if ($validateInput==false){ 
             $validateInput=false; 
             $validateMsg = 'Hai indicato lo stesso dominio per dominio1 e dominio2';
-            $this->responseError($validateMsg,'Input');
-
+            CompareDataMsg::getInstance()->responseError($validateMsg,'Input'); 
         }
   
-        $validateInput =  UtilityUrl::validateDomain($domain1);
-        if ($validateInput==false){
-            
+        $validateInput =  AnalyzeUrl::validateDomain($domain1);
+        if ($validateInput==false){ 
             $validateInput=false; 
             $validateMsg = 'Verificare che il dominio1 sia valido';
-            $this->responseError($validateMsg,'Input');
-
+            CompareDataMsg::getInstance()->responseError($validateMsg,'Input'); 
         } 
  
-        $validateInput =  UtilityUrl::validateDomain($domain2); 
-        if ($validateInput == false){
-            
+        $validateInput =  AnalyzeUrl::validateDomain($domain2); 
+        if ($validateInput == false){ 
             $validateInput=false; 
             $validateMsg = 'Verificare che il dominio2 sia valido';
-            $this->responseError($validateMsg,'Input');
-
+            CompareDataMsg::getInstance()->responseError($validateMsg,'Input'); 
         } 
+  
         $errorParse = false; 
         $crawlWebsite = new CrawlWebsite();
-        $this->setList1($crawlWebsite->crawl($domain1), $domain1); 
+        $Compare2ListUrl = new Compare2ListUrl();
+        $Compare2ListUrl->setList1($crawlWebsite->crawl($domain1), $domain1); 
 
-        if($this->countList1()<=1){
+        if($Compare2ListUrl->countList1()<=1){
             
             $errorParse = true;
             $validateMsg = 'Non sono stati trovati link nel dominio1';
-            $this->responseError($validateMsg,'Parsing');
+            CompareDataMsg::getInstance()->responseError($validateMsg,'Parsing');
 
         }   
-        $this->setList2($crawlWebsite->crawl($domain2), $domain2);   
-        if($this->countList2()<=1){
+        $Compare2ListUrl->setList2($crawlWebsite->crawl($domain2), $domain2);   
+        if($Compare2ListUrl->countList2()<=1){
         
             $errorParse = true;
             $validateMsg = 'Non sono stati trovati link nel dominio2';
-            $this->responseError($validateMsg,'Parsing');
+            CompareDataMsg::getInstance()->responseError($validateMsg,'Parsing');
 
         }  
      
-        $this->responseFile($this->analyzeAndCreateFile());
+        CompareDataMsg::getInstance()->responseFile($Compare2ListUrl->analyzeAndCreateFile());
 
     }  
-    private function responseError($msg='',$errore_type=''){
-
-        $result['error'] = 1; 
-        $result['error_message'] = $msg; 
-        $result['erro_typer'] = $errore_type;
-        
-        echo json_encode($result);
-        die();
-    } 
-    private function responseFile($filename){
-
-        $result['error'] = 0; 
-        $result['filename'] = $filename;
-
-        echo json_encode($result); 
-        die();
-
-    } 
+  
 }
